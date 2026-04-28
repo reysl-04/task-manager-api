@@ -17,7 +17,7 @@ export function getList(req, res, next) {
 
 export function postList(req, res, next) {
     
-    if (!req.body || req.body.name) {
+    if (!req.body || !req.body.name) {
         return next(new Error('Name is required'))
     }
 
