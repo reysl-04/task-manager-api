@@ -33,7 +33,7 @@ export function postList(req, res, next) {
 
 export function deleteList(req, res, next) {
     const id = req.params.id
-    let index = store.lists.findIndex(list => list.id === id)
+    const index = store.lists.findIndex(list => list.id === id)
 
     if (index === -1) {
         return next(new Error(`List Id not found: ${id}`))
