@@ -2,11 +2,14 @@ import store from "../data/store.js"
 import crypto from "node:crypto"
 
 export function getAllTasks(req, res) {
-        res.status(200).json(store.tasks)
+    const listId = req.params.listId
+    const tasksByListId = store.tasks.filter(task => task.listId === listId)
+
+    res.status(200).json(tasksByListId)
 }
 
 export function getTask(req, res, next) {
-    const taskId = req.params.id // Validate Id? I don't t
+    const taskId = req.params.taskId // Validate Id? I don't t
     const taskIndex = store.tasks.findIndex(task => task.id === taskId)
     
     if (taskIndex !== -1) {
@@ -24,25 +27,20 @@ export function postTask(req, res, next) {
 
     const taskBody = req.body
     // Check for all fields 
-    if (!taskBody.listId || !taskBody.name || !taskBody.description || !taskBody.dueDate) {
+    if (!taskBody.name || !taskBody.description || !taskBody.dueDate) {
         return next(new Error('Missing information')) 
         // I can especify what is missing, but later
     }
 
-    const validListId = store.lists.some(list => list.id === taskBody.listId)
+    const validListId = store.lists.some(list => list.id === req.params.listId)
     
     if (!validListId) {
         return next(new Error(`Invalid List ID: ${taskBody.listId}`))
     }
 
-    // Status should always be pending though, as its started
-    // convert date into a standard format
-    // ListID would be a problem, how do I associate it? same id as list most likely
-
-
     // I have to validate due date and the other fields, but i think I can use Zod for that. Ill do it later
     const newTask = {
-        listId: taskBody.listId,
+        listId: req.params.listId,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         dueDate: taskBody.dueDate,
@@ -57,7 +55,7 @@ export function postTask(req, res, next) {
 }
 
 export function updateTask(req, res, next) {
-    const taskId = req.params.id
+    const taskId = req.params.taskId
     const taskIndex = store.tasks.findIndex(task => task.id === taskId)
     
     if (taskIndex === -1) {
@@ -80,7 +78,7 @@ export function updateTask(req, res, next) {
 }
 
 export function deleteTask(req, res, next) {
-    const taskId = req.params.id
+    const taskId = req.params.taskId
     const taskIndex = store.tasks.findIndex(task => task.id === taskId)
 
     if (taskIndex === -1) {
