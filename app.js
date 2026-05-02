@@ -16,7 +16,7 @@ const corsOptions = {
 
 const app = express();
 
-app.use(helment())
+app.use(helmet())
 app.use(cors(corsOptions))
 app.use(morgan('combined'))
 app.use(express.json());
