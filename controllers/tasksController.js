@@ -1,7 +1,6 @@
 import store from "../data/store.js"
 import crypto from "node:crypto"
-import { NotFoundError } from "../errors/customErrors.js"
-import { ValidationError } from "../errors/customErrors.js"
+import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
 
 export function getAllTasks(req, res) {
