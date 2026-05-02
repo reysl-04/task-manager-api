@@ -1,5 +1,5 @@
 import store from "../data/store.js"
-
+import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
 export function getAllLists(req, res) {
     res.status(200).json(store.lists)
@@ -10,7 +10,7 @@ export function getList(req, res, next) {
     const body = store.lists.find(list => list.id === id)
 
     if (!body) {
-        return next(new Error(`List Id not found: ${id}`)) // Add status 4xx that says list not found
+        return next(new NotFoundError(`List Id not found: ${id}`))
     }
     res.status(200).json(body)
 }
@@ -18,7 +18,7 @@ export function getList(req, res, next) {
 export function postList(req, res, next) {
     
     if (!req.body || !req.body.name) {
-        return next(new Error('Name is required'))
+        return next(new ValidationError('Name is required'))
     }
 
     const newList = {
@@ -36,7 +36,7 @@ export function deleteList(req, res, next) {
     const index = store.lists.findIndex(list => list.id === id)
 
     if (index === -1) {
-        return next(new Error(`List Id not found: ${id}`))
+        return next(new NotFoundError(`List Id not found: ${id}`))
     }
 
     store.lists.splice(index, 1)
@@ -48,7 +48,7 @@ export function updateList(req, res, next) {
     const listId = store.lists.findIndex(list => list.id === id)
 
     if (listId === -1) {
-        return next(new Error(`List Id not found: ${id}`))
+        return next(new NotFoundError(`List Id not found: ${id}`))
     }
     
     store.lists[listId].name = req.body.name
