@@ -1,7 +1,11 @@
 import store from "../data/store.js"
 import crypto from "node:crypto"
+import { NotFoundError } from "../errors/customErrors.js"
+import { ValidationError } from "../errors/customErrors.js"
+
 
 export function getAllTasks(req, res) {
+    // Fix: tried get with not-existing listId, returns an empty list
     const listId = req.params.listId
     const tasksByListId = store.tasks.filter(task => task.listId === listId)
 
@@ -15,7 +19,7 @@ export function getTask(req, res, next) {
     if (taskIndex !== -1) {
         res.status(200).json(store.tasks[taskIndex])
     } else {
-        return next(new Error(`Task ID not found: ${taskId}`))
+        return next(new NotFoundError(`Task ID not found: ${taskId}`))
     }
 }
 
@@ -26,16 +30,26 @@ export function postTask(req, res, next) {
     }
 
     const taskBody = req.body
-    // Check for all fields 
-    if (!taskBody.name || !taskBody.description || !taskBody.dueDate) {
-        return next(new Error('Missing information')) 
-        // I can especify what is missing, but later
+    const missingFields = []
+
+    if (!taskBody.name) { 
+        missingFields.push('name')
+    }
+    if (!taskBody.description) {
+        missingFields.push('description')
+    }
+    if (!taskBody.dueDate) {
+        missingFields.push('dueDate')
+    }
+
+    if (missingFields.length > 0) {
+        return next(new ValidationError(`Missing Fields: ${missingFields.join(', ')}`))
     }
 
     const validListId = store.lists.some(list => list.id === req.params.listId)
     
     if (!validListId) {
-        return next(new Error(`Invalid List ID: ${taskBody.listId}`))
+        return next(new NotFoundError(`Invalid List ID: ${taskBody.listId}`))
     }
 
     // I have to validate due date and the other fields, but i think I can use Zod for that. Ill do it later
@@ -59,7 +73,7 @@ export function updateTask(req, res, next) {
     const taskIndex = store.tasks.findIndex(task => task.id === taskId)
     
     if (taskIndex === -1) {
-        return next(new Error(`Task ID not found: ${taskId}`))
+        return next(new NotFoundError(`Task ID not found: ${taskId}`))
     }
 
     // I need to add a checker that makes the task.status value be either pending or done. I'll add it later
@@ -70,7 +84,7 @@ export function updateTask(req, res, next) {
         if (allowedFields.includes(field)) {
             store.tasks[taskIndex][field] = taskBody[field]
         } else {
-            return next(new Error(`Invalid field: ${field}`))
+            return next(new ValidationError(`Invalid field: ${field}`))
         }
     }
 
@@ -82,7 +96,7 @@ export function deleteTask(req, res, next) {
     const taskIndex = store.tasks.findIndex(task => task.id === taskId)
 
     if (taskIndex === -1) {
-        return next(new Error(`Task ID not found: ${taskId}`))
+        return next(new NotFoundError(`Task ID not found: ${taskId}`))
     }
 
     store.tasks.splice(taskIndex, 1)
