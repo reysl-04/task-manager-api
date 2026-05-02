@@ -1,5 +1,6 @@
 import express from "express"
 import cors from "cors"
+import helmet from "helmet"
 
 import listsRouter from "./routes/lists.js"
 import tasksRouter from "./routes/tasks.js"
@@ -14,6 +15,7 @@ const corsOptions = {
 
 const app = express();
 
+app.use(helment())
 app.use(cors(corsOptions))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}))
