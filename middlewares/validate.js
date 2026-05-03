@@ -8,6 +8,7 @@ export default function validateBody(schema) {
             const err = z.flattenError(result.error)
             return next(new ValidationError(err.fieldErrors)) // Custom error export
         }
+        req.body = result.data
         return next()
     }
 }
