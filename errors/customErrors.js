@@ -7,10 +7,11 @@ class NotFoundError extends Error {
 }
 
 class ValidationError extends Error {
-    constructor(message) {
-        super(message)
+    constructor(details) {
+        super("Invalid field(s)")
         this.name = 'ValidationError'
         this.status = 422
+        this.details = details
     }
 }
 

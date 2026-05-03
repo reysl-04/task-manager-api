@@ -24,27 +24,7 @@ export function getTask(req, res, next) {
 
 export function postTask(req, res, next) {
     // Requires listId, dueDate, name & description
-    if (!req.body) {
-        return next(new Error('No body provided'))
-    }
-
     const taskBody = req.body
-    const missingFields = []
-
-    if (!taskBody.name) { 
-        missingFields.push('name')
-    }
-    if (!taskBody.description) {
-        missingFields.push('description')
-    }
-    if (!taskBody.dueDate) {
-        missingFields.push('dueDate')
-    }
-
-    if (missingFields.length > 0) {
-        return next(new ValidationError(`Missing Fields: ${missingFields.join(', ')}`))
-    }
-
     const validListId = store.lists.some(list => list.id === req.params.listId)
     
     if (!validListId) {
@@ -75,18 +55,12 @@ export function updateTask(req, res, next) {
         return next(new NotFoundError(`Task ID not found: ${taskId}`))
     }
 
-    // I need to add a checker that makes the task.status value be either pending or done. I'll add it later
     const taskBody = req.body
-    const allowedFields = ['status', 'name', 'description', 'dueDate']
 
     for (const field in taskBody) {
-        if (allowedFields.includes(field)) {
-            store.tasks[taskIndex][field] = taskBody[field]
-        } else {
-            return next(new ValidationError(`Invalid field: ${field}`))
-        }
+        store.tasks[taskIndex][field] = taskBody[field]
     }
-
+     
     res.status(200).json({ message: `Task Updated - ID: ${taskId} `})
 }
 
