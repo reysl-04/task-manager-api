@@ -55,7 +55,6 @@ export function updateTask(req, res, next) {
         return next(new NotFoundError(`Task ID not found: ${taskId}`))
     }
 
-    // I need to add a checker that makes the task.status value be either pending or done. I'll add it later
     const taskBody = req.body
 
     for (const field in taskBody) {
