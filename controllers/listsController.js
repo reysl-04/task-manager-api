@@ -16,11 +16,6 @@ export function getList(req, res, next) {
 }
 
 export function postList(req, res, next) {
-    
-    if (!req.body || !req.body.name) {
-        return next(new ValidationError('Name is required'))
-    }
-
     const newList = {
         id: Date.now().toString(),
         name: req.body.name,
