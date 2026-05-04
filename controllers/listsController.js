@@ -1,5 +1,5 @@
 import store from "../data/store.js"
-import { NotFoundError, ValidationError } from "../errors/customErrors.js"
+import { NotFoundError } from "../errors/customErrors.js"
 
 export function getAllLists(req, res) {
     res.status(200).json(store.lists)
