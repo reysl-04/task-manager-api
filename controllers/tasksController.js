@@ -3,12 +3,31 @@ import crypto from "node:crypto"
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
 
-export function getAllTasks(req, res) {
-    // Fix: tried get with not-existing listId, returns an empty list
+export function getAllTasks(req, res, next) {
     const listId = req.params.listId
-    const tasksByListId = store.tasks.filter(task => task.listId === listId)
+    const filterKeys = Object.keys(req.query)
 
-    res.status(200).json(tasksByListId)
+    const allowedFilters = ['status', 'dueDate', 'name']
+    
+    for (const key of filterKeys) {
+        if (!allowedFilters.includes(key)) {
+            return next(new ValidationError(`Invalid field: ${key}`))
+        }
+    }
+
+    const allTasks = store.tasks.filter((task) => {
+        if (task.listId !== listId) {
+            return false
+        }
+        for (const key of filterKeys) {
+            if (req.query[key] !== task[key]) {
+                return false
+            }
+        }
+        return true
+    })
+
+    res.status(200).json(allTasks)
 }
 
 export function getTask(req, res, next) {
