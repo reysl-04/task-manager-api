@@ -78,7 +78,7 @@ PORT=3000
 
 ## API
 
-Base URL: `http://localhost:3000`
+    Base URL : 'https://task-manager-api-production-5765.up.railway.app'
 
 ### Lists
 
