@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import pool from "./pool.js"
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __dirname = path.dirname(__filename)
 
 const migrationsDir = path.join(__dirname, 'migrations')
 
@@ -34,6 +34,8 @@ async function migrate() {
 
         const upSection = sql.split(`-- down`)[0].replace(`-- up`, '')
 
+        console.log(upSection)
+        
         await pool.query(upSection)
         await pool.query(`INSERT INTO migrations (filename) VALUES ($1)`, [file])
         console.log(`Applied: ${file}`)
