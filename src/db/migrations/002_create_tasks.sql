@@ -9,6 +9,8 @@ CREATE TABLE tasks (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+
 -- down
 DROP TABLE tasks;
 
