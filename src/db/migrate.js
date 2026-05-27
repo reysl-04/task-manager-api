@@ -31,14 +31,23 @@ async function migrate() {
         }
 
         const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8')
-
         const upSection = sql.split(`-- down`)[0].replace(`-- up`, '')
 
-        console.log(upSection)
+        const client = await pool.connect()
+
+        try {
+            await client.query('BEGIN')
+            await pool.query(upSection)
+            await pool.query(`INSERT INTO migrations (filename) VALUES ($1)`, [file])
+            await pool.query('COMMIT')
+            console.log(`Applied: ${file}`)
+        } catch (e) {
+            await client.query(`ROLLBACK`)
+            throw e
+        } finally {
+            client.release()
+        }
         
-        await pool.query(upSection)
-        await pool.query(`INSERT INTO migrations (filename) VALUES ($1)`, [file])
-        console.log(`Applied: ${file}`)
     }
 
     await pool.end()
