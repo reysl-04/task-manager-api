@@ -1,21 +1,28 @@
 # Task Manager API
 
-A small REST API for managing task lists and their tasks, built with Express 5 and validated with Zod. Data is held in memory, so the store resets each time the server restarts.
+A REST API for managing users and their tasks, built with Express and PostgreSQL. Replaces the previous in-memory store with a real relational database, adding users as a resource with tasks scoped to them.
 
 ## Features
 
-- CRUD for lists
-- CRUD for tasks scoped under a list
-- Query-param filtering on tasks (`status`, `dueDate`, `name`)
+- CRUD for users
+- CRUD for tasks scoped under a user
+- Query-param filtering on tasks (`status`, `due_date`)
 - Schema validation with Zod
 - Centralized error handling with custom `NotFoundError` and `ValidationError`
 - Security and logging middleware via `helmet`, `cors`, and `morgan`
+- Database migrations and seeders
+- Connection pooling with `pg`
+- Dockerized Postgres for local development
 
 ## Tech Stack
 
 - Node.js (ES Modules)
 - Express 5
+- PostgreSQL 16
 - Zod 4
+- node-postgres (`pg`)
+- bcrypt
+- Docker Compose
 - Helmet, CORS, Morgan
 - dotenv
 - nodemon (dev)
@@ -25,11 +32,40 @@ A small REST API for managing task lists and their tasks, built with Express 5 a
 ### Prerequisites
 
 - Node.js 18+
+- Docker
 
 ### Install
 
 ```bash
 npm install
+```
+
+### Environment
+
+Create a `.env` file at the project root:
+
+```
+DATABASE_URL=postgresql://<user>:<password>@localhost:5433/<dbname>
+PORT=3000
+NODE_ENV=development
+```
+
+### Start the database
+
+```bash
+docker compose up -d
+```
+
+### Run migrations
+
+```bash
+npm run migrate
+```
+
+### Seed the database
+
+```bash
+npm run seed
 ```
 
 ### Run
@@ -44,79 +80,84 @@ npm start
 
 The server listens on `process.env.PORT` or `3000`.
 
-### Environment
-
-Create a `.env` file at the project root if you want to override the port:
-
-```
-PORT=3000
-```
-
 ## Project Structure
 
 ```
 .
-├── app.js                  # Express app + middleware wiring
-├── server.js               # Entry point
-├── routes/
-│   ├── lists.js            # /lists routes (mounts tasks)
-│   └── tasks.js            # /lists/:listId/tasks routes
-├── controllers/
-│   ├── listsController.js
-│   └── tasksController.js
-├── schemas/
-│   ├── listSchemas.js      # Zod schema for lists
-│   └── taskSchemas.js      # Zod create/update schemas for tasks
-├── middlewares/
-│   ├── validate.js         # Body validator factory
-│   └── errorHandler.js     # Central error handler
-├── errors/
-│   └── customErrors.js     # NotFoundError, ValidationError
-└── data/
-    └── store.js            # In-memory store
+├── docker-compose.yml
+├── app.js                        # Express app + middleware wiring
+├── server.js                     # Entry point
+├── src/
+│   ├── db/
+│   │   ├── pool.js               # pg Pool instance
+│   │   ├── migrate.js            # Migration runner
+│   │   ├── seed.js               # Seeder script
+│   │   └── migrations/
+│   │       ├── 001_create_users.sql
+│   │       ├── 002_create_tasks.sql
+│   │       └── 003_update_tasks.sql
+│   ├── routes/
+│   │   ├── users.js              # /users routes (mounts tasks)
+│   │   └── tasks.js              # /users/:userId/tasks routes
+│   ├── controllers/
+│   │   ├── usersController.js
+│   │   └── tasksController.js
+│   ├── services/
+│   │   └── usersService.js
+│   ├── schemas/
+│   │   ├── userSchema.js         # Zod schemas for users
+│   │   └── taskSchemas.js        # Zod schemas for tasks
+│   ├── middlewares/
+│   │   ├── asyncHandler.js       # Async error wrapper
+│   │   ├── validate.js           # Body validator factory
+│   │   └── errorHandler.js       # Central error handler
+│   └── errors/
+│       └── customErrors.js       # NotFoundError, ValidationError
 ```
 
 ## API
 
-    Base URL : 'https://task-manager-api-production-5765.up.railway.app'
+Base URL: `https://task-manager-api-production-5765.up.railway.app`
 
-### Lists
+### Users
 
-| Method | Endpoint      | Description           | Body                |
-| ------ | ------------- | --------------------- | ------------------- |
-| GET    | `/lists`      | Get all lists         | —                   |
-| GET    | `/lists/:id`  | Get a list by id      | —                   |
-| POST   | `/lists`      | Create a list         | `{ "name": string }` |
-| PATCH  | `/lists/:id`  | Update a list's name  | `{ "name": string }` |
-| DELETE | `/lists/:id`  | Delete a list         | —                   |
+| Method | Endpoint       | Description          | Body                                          |
+| ------ | -------------- | -------------------- | --------------------------------------------- |
+| GET    | `/users`       | Get all users        | —                                             |
+| GET    | `/users/:id`   | Get a user by id     | —                                             |
+| POST   | `/users`       | Create a user        | `{ "name", "email", "password" }`             |
+| PATCH  | `/users/:id`   | Update a user        | `{ "name"?, "email"? }` (at least one)        |
+| DELETE | `/users/:id`   | Delete a user        | —                                             |
 
-**List shape**
+**User shape**
 
 ```json
 {
-  "id": "1730000000000",
-  "name": "Groceries",
-  "createdAt": "2026-05-05T12:00:00.000Z"
+  "id": 1,
+  "name": "Axe",
+  "email": "axe@gmail.com",
+  "created_at": "2026-05-05T12:00:00.000Z"
 }
 ```
 
+> `password_hash` is never returned in any response.
+
 ### Tasks
 
-Tasks are nested under a list.
+Tasks are nested under a user.
 
-| Method | Endpoint                              | Description                      |
-| ------ | ------------------------------------- | -------------------------------- |
-| GET    | `/lists/:listId/tasks`                | Get all tasks for a list         |
-| GET    | `/lists/:listId/tasks/:taskId`        | Get a single task                |
-| POST   | `/lists/:listId/tasks`                | Create a task in the list        |
-| PATCH  | `/lists/:listId/tasks/:taskId`        | Update one or more task fields   |
-| DELETE | `/lists/:listId/tasks/:taskId`        | Delete a task                    |
+| Method | Endpoint                          | Description                    |
+| ------ | --------------------------------- | ------------------------------ |
+| GET    | `/users/:userId/tasks`            | Get all tasks for a user       |
+| GET    | `/users/:userId/tasks/:taskId`    | Get a single task              |
+| POST   | `/users/:userId/tasks`            | Create a task for a user       |
+| PATCH  | `/users/:userId/tasks/:taskId`    | Update one or more task fields |
+| DELETE | `/users/:userId/tasks/:taskId`    | Delete a task                  |
 
-**Filtering** `GET /lists/:listId/tasks` accepts these query params:
+**Filtering** — `GET /users/:userId/tasks` accepts these query params:
 
 - `status` — `pending` or `done`
-- `dueDate` — ISO datetime string
-- `name` — exact match
+- `due_date` — ISO datetime string
 
 Unknown query keys return `422`.
 
@@ -124,9 +165,9 @@ Unknown query keys return `422`.
 
 ```json
 {
-  "name": "Buy milk",
+  "title": "Buy milk",
   "description": "2L whole milk",
-  "dueDate": "2026-05-10T18:00:00.000Z"
+  "due_date": "2026-05-10T18:00:00.000Z"
 }
 ```
 
@@ -134,10 +175,10 @@ Unknown query keys return `422`.
 
 ```json
 {
-  "name": "Buy oat milk",
+  "title": "Buy oat milk",
   "description": "1L",
   "status": "done",
-  "dueDate": "2026-05-11T18:00:00.000Z"
+  "due_date": "2026-05-11T18:00:00.000Z"
 }
 ```
 
@@ -145,36 +186,52 @@ Unknown query keys return `422`.
 
 ```json
 {
-  "listId": "1730000000000",
-  "id": "uuid",
-  "createdAt": "2026-05-05T12:00:00.000Z",
-  "dueDate": "2026-05-10T18:00:00.000Z",
+  "id": 1,
+  "user_id": 1,
+  "title": "Buy milk",
+  "description": "2L whole milk",
   "status": "pending",
-  "name": "Buy milk",
-  "description": "2L whole milk"
+  "due_date": "2026-05-10T18:00:00.000Z",
+  "created_at": "2026-05-05T12:00:00.000Z"
 }
 ```
 
-## Error Format
+## Schema
 
-Errors are returned as JSON with the appropriate HTTP status:
+```sql
+users
+  id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  name          VARCHAR(25)  NOT NULL
+  email         VARCHAR(100) NOT NULL UNIQUE CHECK (email LIKE '%@gmail.com')
+  password_hash TEXT         NOT NULL
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+
+tasks
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  user_id     BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  title       VARCHAR(50) NOT NULL
+  description TEXT
+  status      VARCHAR(7)  NOT NULL CHECK (status IN ('pending', 'done'))
+  due_date    TIMESTAMPTZ
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
+INDEX idx_tasks_user_id ON tasks(user_id)
+```
+
+## Error Format
 
 ```json
 {
   "error": "Invalid field(s)",
   "details": {
-    "name": ["String must contain at least 1 character(s)"]
+    "title": ["String must contain at least 1 character(s)"]
   }
 }
 ```
 
-| Status | When                                                  |
-| ------ | ----------------------------------------------------- |
-| 404    | List or task id not found                             |
-| 422    | Body fails Zod validation, or unknown query parameter |
-| 500    | Unhandled errors                                      |
-
-## Notes
-
-- The store is in memory only — restarting the server clears all data.
-- List ids are timestamp strings; task ids are UUIDs.
+| Status | When                                                   |
+| ------ | ------------------------------------------------------ |
+| 404    | User or task id not found                              |
+| 409    | Email already in use                                   |
+| 422    | Body fails Zod validation, or unknown query parameter  |
+| 500    | Unhandled errors                                       |
