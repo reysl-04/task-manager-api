@@ -1,6 +1,5 @@
 import pool from "../src/db/pool.js"
 
-import crypto from "node:crypto"
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 import { error } from "node:console"
 
@@ -101,16 +100,20 @@ export async function updateTask(req, res, next) {
 export async function deleteTask(req, res, next) {
     const taskId = req.params.taskId
 
-    const { rows } = await pool.query(`
-        DELETE FROM tasks
-        WHERE id = $1
-        RETURNING id
-    `, [taskId])
+    try {
+        const { rows } = await pool.query(`
+            DELETE FROM tasks
+            WHERE id = $1
+            RETURNING id
+        `, [taskId])
 
-    if (!rows[0]) {
-        return next(new NotFoundError(`Task ID not found: ${taskId}`))
-    } else {
-        res.status(204).send()
+        if (!rows[0]) {
+            return next(new NotFoundError(`Task ID not found: ${taskId}`))
+        } else {
+            res.status(204).send()
+        }
+    } catch(e) {
+        return next(e)
     }
 }
 
