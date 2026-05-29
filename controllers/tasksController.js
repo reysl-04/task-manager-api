@@ -1,8 +1,5 @@
 import pool from "../src/db/pool.js"
-
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
-import { error } from "node:console"
-
 
 export async function getAllTasks(req, res, next) {
     const userId = req.params.userId
