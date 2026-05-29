@@ -22,6 +22,19 @@ app.use(morgan('combined'))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}))
 
+app.get('/', (req, res) => {
+  res.json({
+    name: "Task Manager API",
+    version: "1.0",
+    documentation: "https://github.com/reysl-04/task-manager-api",
+    endpoints: {
+      tasks: "GET /tasks, POST /tasks, PATCH /tasks/:id, DELETE /tasks/:id",
+      lists: "GET /lists, POST /lists, etc."
+    },
+    status: "ok"
+  });
+});
+
 app.use('/users', usersRouter)
 app.use('/tasks', tasksRouter)
 
