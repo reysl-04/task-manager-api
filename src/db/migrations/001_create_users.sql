@@ -1,0 +1,10 @@
+-- up
+CREATE TABLE users (
+	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	name VARCHAR(25) NOT NULL,
+	email VARCHAR(100) UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- down
+DROP TABLE users;

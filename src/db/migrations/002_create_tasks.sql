@@ -1,0 +1,15 @@
+-- up
+CREATE TABLE tasks (
+	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+	user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(50) NOT NULL,
+    description TEXT,
+    status VARCHAR(7) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+
+-- down
+DROP TABLE tasks;
+

@@ -3,7 +3,7 @@ import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
 
-import listsRouter from "./routes/lists.js"
+import usersRouter from "./routes/users.js"
 import tasksRouter from "./routes/tasks.js"
 import errorHandler from "./middlewares/errorHandler.js"
 
@@ -22,7 +22,7 @@ app.use(morgan('combined'))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}))
 
-app.use('/lists', listsRouter)
+app.use('/users', usersRouter)
 app.use('/tasks', tasksRouter)
 
 app.use(errorHandler)
