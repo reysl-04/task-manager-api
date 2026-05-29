@@ -3,12 +3,6 @@ import createUser from "../services/usersService.js"
 
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
-export function asyncHandler(fn) {
-    return ( req , res , next ) => {
-        Promise.resolve(fn(req, res, next)).catch(next)
-    }
-}
-
 export async function getAllUsers(req, res, next) {
     const { rows } = await pool.query(`
         SELECT id, name, email, created_at
