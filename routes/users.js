@@ -15,3 +15,5 @@ router.get('/:userId', asyncHandler(getUser))
 router.post('/', validateBody(createUserSchema), asyncHandler(postUser))
 router.patch('/:userId', validateBody(updateUserSchema), asyncHandler(updateUser))
 router.delete('/:userId', asyncHandler(deleteUser))
+
+export default router
