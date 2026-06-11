@@ -1,7 +1,8 @@
-import bcrypt from "bcrypt"
-import pool from "../src/db/pool.js"
 
-export default async function createUser({name, email, password}) {
+import bcrypt from "bcrypt"
+import pool from "../db/pool.js"
+
+export default async function createUser({name, email, password}: {name: string, email: string, password: string}) {
     const passwordHash = await bcrypt.hash(password, 10)
     const { rows } = await pool.query(`
         INSERT INTO users (name, email, password_hash)

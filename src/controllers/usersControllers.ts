@@ -1,9 +1,11 @@
-import pool from "../src/db/pool.js"
+import type { Request, Response, NextFunction } from 'express'
+
+import pool from "../db/pool.js"
 import createUser from "../services/usersService.js"
 
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
-export async function getAllUsers(req, res, next) {
+export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
     const { rows } = await pool.query(`
         SELECT id, name, email, created_at
         FROM users 
@@ -11,7 +13,7 @@ export async function getAllUsers(req, res, next) {
     res.status(200).json(rows)
 }
 
-export async function getUser(req, res, next) {
+export async function getUser(req: Request, res: Response, next: NextFunction) {
     const userId = req.params.userId
 
     const { rows } = await pool.query(`
@@ -26,13 +28,13 @@ export async function getUser(req, res, next) {
     res.status(200).json(rows[0])
 }
 
-export async function postUser(req, res, next) {
+export async function postUser(req: Request, res: Response, next: NextFunction) {
     const { name, email, password } = req.body
     const user = await createUser({ name, email, password })
     res.status(201).json(user)
 }
 
-export async function updateUser(req, res, next) {
+export async function updateUser(req: Request, res: Response, next: NextFunction) {
     const userId = req.params.userId
     const userKeys = Object.keys(req.body)
     const allowedFields = ["name", "email"]
@@ -61,7 +63,7 @@ export async function updateUser(req, res, next) {
     res.status(200).json(rows[0])
 }
 
-export async function deleteUser(req, res, next) {
+export async function deleteUser(req: Request, res: Response, next: NextFunction) {
     const userId = req.params.userId
 
     const { rows } = await pool.query(`

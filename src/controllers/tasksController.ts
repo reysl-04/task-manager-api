@@ -1,7 +1,9 @@
-import pool from "../src/db/pool.js"
+import type { Request, Response, NextFunction } from 'express'
+
+import pool from "../db/pool.js"
 import { NotFoundError, ValidationError } from "../errors/customErrors.js"
 
-export async function getAllTasks(req, res, next) {
+export async function getAllTasks(req: Request, res: Response, next: NextFunction) {
     const userId = req.params.userId
     const filterKeys = Object.keys(req.query)
 
@@ -29,7 +31,7 @@ export async function getAllTasks(req, res, next) {
     res.status(200).json(rows)
 }
 
-export async function getTask(req, res, next) {
+export async function getTask(req: Request, res: Response, next: NextFunction) {
     const taskId = req.params.taskId
 
     const { rows } = await pool.query(`
@@ -45,7 +47,7 @@ export async function getTask(req, res, next) {
     }
 }
 
-export async function postTask(req, res, next) {
+export async function postTask(req: Request, res: Response, next: NextFunction) {
     const userId = req.params.userId
     const taskBody = req.body
 
@@ -57,7 +59,7 @@ export async function postTask(req, res, next) {
         `, [userId, taskBody.title, taskBody.description, taskBody.dueDate])
 
         res.status(201).json({ message: `New task created. ID: ${rows[0].id}` })
-    } catch(e) {
+    } catch(e: any) {
         if (e.code === '23503') {
             return next(new NotFoundError(`User not found`))
         }
@@ -65,7 +67,7 @@ export async function postTask(req, res, next) {
     }
 }
 
-export async function updateTask(req, res, next) {
+export async function updateTask(req: Request, res: Response, next: NextFunction) {
     const taskId = req.params.taskId
     const allowedFields = ['title', 'description', 'due_date', 'status']
 
@@ -94,7 +96,7 @@ export async function updateTask(req, res, next) {
 }
 
 
-export async function deleteTask(req, res, next) {
+export async function deleteTask(req: Request, res: Response, next: NextFunction) {
     const taskId = req.params.taskId
 
     try {
